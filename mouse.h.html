@@ -1,0 +1,120 @@
+<html>
+<head>
+<title>~\Desktop\GameOfLife\mouse.h.html</title>
+<meta name="Generator" content="Vim/6.4">
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+</head>
+<body bgcolor="#000000" text="#c0c0c0">
+<pre>
+<font color="#80a0ff">/*</font>
+<font color="#80a0ff">** Copyright 1998-2006, Peter J. Jensen</font>
+<font color="#80a0ff">** All Rights Reserved.</font>
+<font color="#80a0ff">** </font>
+<font color="#80a0ff">** This is UNPUBLISHED PROPRIETARY SOURCE CODE of Pete Jensen</font>
+<font color="#80a0ff">** the contents of this file may not be disclosed to third parties, copied or</font>
+<font color="#80a0ff">** duplicated in any form, in whole or in part, without the prior written</font>
+<font color="#80a0ff">** permission of Hairylogic, Inc.</font>
+<font color="#80a0ff">** </font>
+<font color="#80a0ff">** RESTRICTED RIGHTS LEGEND:</font>
+<font color="#80a0ff">** Use, duplication or disclosure by the Government is subject to restrictions</font>
+<font color="#80a0ff">** as set forth in subdivision (c)(1)(ii) of the Rights in Technical Data</font>
+<font color="#80a0ff">** and Computer Software clause at DFARS 252.227-7013, and/or in similar or</font>
+<font color="#80a0ff">** successor clauses in the FAR, DOD or NASA FAR Supplement. Unpublished -</font>
+<font color="#80a0ff">** rights reserved under the Copyright Laws of the United States.</font>
+<font color="#80a0ff">**</font>
+<font color="#80a0ff">**        ______</font>
+<font color="#80a0ff">**       /_____/\</font>
+<font color="#80a0ff">**      /_____\\ \      FILE:    mouse.h</font>
+<font color="#80a0ff">**     /_____\ \\ /     AUTHOR:  Pete Jensen</font>
+<font color="#80a0ff">**    /_____/ \/ / /    DATE:    Oct 19th, 2006</font>
+<font color="#80a0ff">**   /_____/ /   \//\   VERSION: 1.0.0</font>
+<font color="#80a0ff">**   \_____\//\   / /   </font>
+<font color="#80a0ff">**    \_____/ / /\ /    </font>
+<font color="#80a0ff">**     \_____/ \\ \     HTTP://euler.acadiau.ca/~064881j</font>
+<font color="#80a0ff">**      \_____\ \\ </font>
+<font color="#80a0ff">**       \_____\/</font>
+<font color="#80a0ff">**</font>
+<font color="#80a0ff">** A homegrown self explanitory file for interfacing with the</font>
+<font color="#80a0ff">** mouse.  This is an inline module.</font>
+<font color="#80a0ff">**</font>
+<font color="#80a0ff">*/</font>
+
+<font color="#ff80ff">#ifndef _MOUSE_H</font>
+<font color="#ff80ff">#define _MOUSE_H</font>
+
+<font color="#ff80ff">#define MOUSE_BUTTON_1      </font><font color="#ffa0a0">0x01</font>
+<font color="#ff80ff">#define MOUSE_BUTTON_2      </font><font color="#ffa0a0">0x02</font>
+
+<font color="#80a0ff">//WARNING: Untested</font>
+<font color="#ff80ff">#define MOUSE_BUTTON_1_PRESSED ((MouseB &amp; </font><font color="#ffa0a0">1</font><font color="#ff80ff">) == MOUSE_BUTTON_1)</font>
+<font color="#ff80ff">#define MOUSE_BUTTON_2_PRESSED ((MouseB &amp; </font><font color="#ffa0a0">2</font><font color="#ff80ff">) == MOUSE_BUTTON_2)</font>
+
+<font color="#60ff60"><b>char</b></font> IfMouse (<font color="#60ff60"><b>void</b></font>);
+<font color="#60ff60"><b>void</b></font> ShowMouse (<font color="#60ff60"><b>void</b></font>);
+<font color="#60ff60"><b>void</b></font> HideMouse (<font color="#60ff60"><b>void</b></font>);
+<font color="#60ff60"><b>void</b></font> ReadMouse (<font color="#60ff60"><b>void</b></font>);
+<font color="#60ff60"><b>void</b></font> SetMouseXY (<font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> X, <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Y);
+<font color="#60ff60"><b>void</b></font> SetMinMaxX (<font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Min, <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Max);
+<font color="#60ff60"><b>void</b></font> SetMinMaxY (<font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Min, <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Max);
+
+<font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> MouseX, MouseY, MouseB;
+
+<font color="#60ff60"><b>char</b></font> IfMouse ()
+{
+  <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Result;
+  <font color="#ffff60"><b>asm</b></font> mov ax, <font color="#ffa0a0">0</font>
+  <font color="#ffff60"><b>asm</b></font> <font color="#60ff60"><b>int</b></font> <font color="#ffa0a0">0x33</font>
+  <font color="#ffff60"><b>asm</b></font> mov Result, ax
+  <font color="#ffff60"><b>return</b></font> Result;
+}
+
+<font color="#60ff60"><b>void</b></font> ShowMouse ()
+{
+  <font color="#ffff60"><b>asm</b></font> mov ax, <font color="#ffa0a0">0x1</font>
+  <font color="#ffff60"><b>asm</b></font> <font color="#60ff60"><b>int</b></font> <font color="#ffa0a0">0x33</font>
+}
+
+<font color="#60ff60"><b>void</b></font> HideMouse ()
+{
+  <font color="#ffff60"><b>asm</b></font>{ mov ax, <font color="#ffa0a0">0x2</font>
+  <font color="#60ff60"><b>int</b></font> <font color="#ffa0a0">0x33</font>
+  }
+}
+
+<font color="#60ff60"><b>void</b></font> ReadMouse ()
+{
+  <font color="#ffff60"><b>asm</b></font> mov ax, <font color="#ffa0a0">0x3</font>
+  <font color="#ffff60"><b>asm</b></font> <font color="#60ff60"><b>int</b></font> <font color="#ffa0a0">0x33</font>
+  <font color="#ffff60"><b>asm</b></font> mov MouseB, bx
+  <font color="#ffff60"><b>asm</b></font> mov MouseX, cx
+  <font color="#ffff60"><b>asm</b></font> mov MouseY, dx
+}
+
+<font color="#60ff60"><b>void</b></font> SetMouseXY (<font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> X, <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Y)
+{
+  <font color="#ffff60"><b>asm</b></font> mov ax, <font color="#ffa0a0">0x4</font>
+  <font color="#ffff60"><b>asm</b></font> mov cx, X
+  <font color="#ffff60"><b>asm</b></font> mov dx, Y
+  <font color="#ffff60"><b>asm</b></font> <font color="#60ff60"><b>int</b></font> <font color="#ffa0a0">0x33</font>
+}
+
+<font color="#60ff60"><b>void</b></font> SetMinMaxX (<font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Min, <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Max)
+{
+  <font color="#ffff60"><b>asm</b></font> mov ax, <font color="#ffa0a0">0x7</font>
+  <font color="#ffff60"><b>asm</b></font> mov cx, Min
+  <font color="#ffff60"><b>asm</b></font> mov dx, Max
+  <font color="#ffff60"><b>asm</b></font> <font color="#60ff60"><b>int</b></font> <font color="#ffa0a0">0x33</font>
+}
+
+<font color="#60ff60"><b>void</b></font> SetMinMaxY (<font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Min, <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> Max)
+{
+  <font color="#ffff60"><b>asm</b></font> mov ax, <font color="#ffa0a0">0x8</font>
+  <font color="#ffff60"><b>asm</b></font> mov cx, Min
+  <font color="#ffff60"><b>asm</b></font> mov dx, Max
+  <font color="#ffff60"><b>asm</b></font> <font color="#60ff60"><b>int</b></font> <font color="#ffa0a0">0x33</font>
+}
+
+<font color="#ff80ff">#endif</font>
+</pre>
+</body>
+</html>

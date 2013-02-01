@@ -1,0 +1,219 @@
+<html>
+<head>
+<title>~\Desktop\GameOfLife\graph.h.html</title>
+<meta name="Generator" content="Vim/6.4">
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+</head>
+<body bgcolor="#000000" text="#c0c0c0">
+<pre>
+<font color="#80a0ff">/*</font>
+<font color="#80a0ff">** Copyright 1998-2005, Peter J. Jensen.</font>
+<font color="#80a0ff">** All Rights Reserved.</font>
+<font color="#80a0ff">** </font>
+<font color="#80a0ff">** This is UNPUBLISHED PROPRIETARY SOURCE CODE of Peter J. Jensen</font>
+<font color="#80a0ff">** the contents of this file may not be disclosed to third parties, copied or</font>
+<font color="#80a0ff">** duplicated in any form, in whole or in part, without the prior written</font>
+<font color="#80a0ff">** permission of Hairylogic, Inc.</font>
+<font color="#80a0ff">** </font>
+<font color="#80a0ff">** RESTRICTED RIGHTS LEGEND:</font>
+<font color="#80a0ff">** Use, duplication or disclosure by the Government is subject to restrictions</font>
+<font color="#80a0ff">** as set forth in subdivision (c)(1)(ii) of the Rights in Technical Data</font>
+<font color="#80a0ff">** and Computer Software clause at DFARS 252.227-7013, and/or in similar or</font>
+<font color="#80a0ff">** successor clauses in the FAR, DOD or NASA FAR Supplement. Unpublished -</font>
+<font color="#80a0ff">** rights reserved under the Copyright Laws of the United States.</font>
+<font color="#80a0ff">**</font>
+<font color="#80a0ff">**        ______</font>
+<font color="#80a0ff">**       /_____/\</font>
+<font color="#80a0ff">**      /_____\\ \      FILE:    graph.h</font>
+<font color="#80a0ff">**     /_____\ \\ /     AUTHOR:  Pete Jensen</font>
+<font color="#80a0ff">**    /_____/ \/ / /    DATE:    Oct 19th, 2006</font>
+<font color="#80a0ff">**   /_____/ /   \//\   VERSION: 2.0.1</font>
+<font color="#80a0ff">**   \_____\//\   / /   </font>
+<font color="#80a0ff">**    \_____/ / /\ /    </font>
+<font color="#80a0ff">**     \_____/ \\ \     HTTP://euler.acadiau.ca/~064881j</font>
+<font color="#80a0ff">**      \_____\ \\ </font>
+<font color="#80a0ff">**       \_____\/</font>
+<font color="#80a0ff">**</font>
+<font color="#80a0ff">** This in-line module handles all low level video operations, </font>
+<font color="#80a0ff">** such as initializing a graphics mode, ending a graphics mode, </font>
+<font color="#80a0ff">** puting pixels etc.</font>
+<font color="#80a0ff">** </font>
+<font color="#80a0ff">** &lt;IN-LINE MODULE CONTENTS&gt;</font>
+<font color="#80a0ff">**    initgraph();</font>
+<font color="#80a0ff">**    endgraph();</font>
+<font color="#80a0ff">**    pset();</font>
+<font color="#80a0ff">**    get_pixelcolor();</font>
+<font color="#80a0ff">** </font>
+<font color="#80a0ff">**    I admit PSET reminds me quite a bit of QBASIC.</font>
+<font color="#80a0ff">**</font>
+<font color="#80a0ff">** WARNING:</font>
+<font color="#80a0ff">**    Do not use psetn(word, word, word); anywhere but GameOfLife!</font>
+<font color="#80a0ff">**</font>
+<font color="#80a0ff">** USAGE:</font>
+<font color="#80a0ff">**    Only include graph.h, since this is in-line this IS the implementation.</font>
+<font color="#80a0ff">*/</font>
+
+<font color="#ff80ff">#if !defined(__GRAPH_H)</font>
+<font color="#ff80ff">#define __GRAPH_H</font>
+
+<font color="#ff80ff">#include </font><font color="#ffa0a0">&lt;DOS.H&gt;</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Defines for graphics module</font>
+<font color="#ff80ff">#define VIDEO_BIOS      10H</font>
+<font color="#ff80ff">#define VIDEO_RAM       </font><font color="#ffa0a0">0xA000</font><font color="#ff80ff"> </font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Screen size, width &amp; height defined</font>
+<font color="#ff80ff">#define SCREEN_SIZE     (</font><font color="#ffa0a0">320</font><font color="#ff80ff"> * </font><font color="#ffa0a0">200</font><font color="#ff80ff">)</font>
+<font color="#ff80ff">#define SCREEN_WIDTH    </font><font color="#ffa0a0">320</font>
+<font color="#ff80ff">#define SCREEN_HEIGHT   </font><font color="#ffa0a0">200</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Typdefs, byte &amp; word.</font>
+<font color="#60ff60"><b>typedef</b></font> <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>char</b></font> byte;
+<font color="#60ff60"><b>typedef</b></font> <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>short</b></font> word;
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Prototypes</font>
+<font color="#60ff60"><b>void</b></font> initgraph(<font color="#60ff60"><b>void</b></font>);
+<font color="#60ff60"><b>void</b></font> endgraph(<font color="#60ff60"><b>void</b></font>);
+<font color="#60ff60"><b>void</b></font> pset(word X, word Y, byte color);
+<font color="#60ff60"><b>void</b></font> psetn(word X, word Y, byte color);
+byte get_pixelcolor(word X, word Y);
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">/*</font><font color="#80a0ff">*</font>
+<font color="#80a0ff"> * Function: initgraph</font>
+<font color="#80a0ff"> * Purpose : To initialize the graphics mode into mode 13H; it has the </font>
+<font color="#80a0ff"> *           properties of 320x200 screensize &amp; 8 bits per pixel.</font>
+<font color="#80a0ff"> * Inputs  : Void</font>
+<font color="#80a0ff"> * Returns : Void</font>
+<font color="#80a0ff"> * Modifies: The current graphics mode.</font>
+<font color="#80a0ff"> * Sample Call : initgraph();</font>
+<font color="#80a0ff"> </font><font color="#80a0ff">*/</font>
+<font color="#60ff60"><b>void</b></font> initgraph(<font color="#60ff60"><b>void</b></font>) {
+    <font color="#80a0ff">//union REGS IN, OUT; /* Register variables */</font>
+    <font color="#80a0ff">//IN.h.al = 0x13; </font>
+    <font color="#80a0ff">//IN.h.ah = 0x00; /* This is the actual screen settings Zord!*/</font>
+    <font color="#80a0ff">//int86(0x10, &amp;IN, &amp;OUT); </font>
+
+    <font color="#ffff60"><b>asm</b></font> MOV AL, 13H;
+    <font color="#ffff60"><b>asm</b></font> MOV AH, 00H;
+    <font color="#ffff60"><b>asm</b></font> INT VIDEO_BIOS;
+}
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">/*</font>
+<font color="#80a0ff"> * Function: endgraph</font>
+<font color="#80a0ff"> * Purpose : To take us out of the 13H graphics mode and back into dos text</font>
+<font color="#80a0ff"> *           mode. This should be run anytime the program hits an error. </font>
+<font color="#80a0ff"> *           and displays an error message.</font>
+<font color="#80a0ff"> * Inputs  : Void</font>
+<font color="#80a0ff"> * Returns : Void.</font>
+<font color="#80a0ff"> * Modifies: The Current Graphics Mode.</font>
+<font color="#80a0ff"> * Sample Call : endgraph();</font>
+<font color="#80a0ff"> </font><font color="#80a0ff">*/</font>
+<font color="#60ff60"><b>void</b></font> endgraph(<font color="#60ff60"><b>void</b></font>) {
+   <font color="#80a0ff">//union REGS IN, OUT; /* Register variables */</font>
+   <font color="#80a0ff">//IN.h.al = 0x3;    /* Video mode parameter - mode 3H*/</font>
+   <font color="#80a0ff">//IN.h.ah = 0x00;   /* Interrupt 10H - service 0H */</font>
+   <font color="#80a0ff">//int86(0x10, &amp;IN, &amp;OUT); /* Call the interrupt 10H (Video Control)*/</font>
+
+    <font color="#ffff60"><b>asm</b></font> MOV AL, 3H;
+    <font color="#ffff60"><b>asm</b></font> MOV AH, 00H;
+    <font color="#ffff60"><b>asm</b></font> INT VIDEO_BIOS;
+
+}
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">/*</font>
+<font color="#80a0ff"> * Function: pset</font>
+<font color="#80a0ff"> * Purpose : To put a pixel @ x,y with given colorByte.</font>
+<font color="#80a0ff"> * Inputs  : word X: The X location of the pixel.</font>
+<font color="#80a0ff">             word Y: The Y location of the pixel.</font>
+<font color="#80a0ff"> * Returns : Void</font>
+<font color="#80a0ff"> * Modifies: Adds one pixel to the graphics screen.</font>
+<font color="#80a0ff"> * Sample Call : pset(10, 10, 14);</font>
+<font color="#80a0ff"> </font><font color="#80a0ff">*/</font>
+<font color="#60ff60"><b>void</b></font> pset(word X, word Y, byte color) {
+
+    <font color="#80a0ff">// OFFSET HACK!! DO NOT RE-USE THIS FUNCTION!</font>
+    <font color="#80a0ff">// THIS IS A QUICK HACK FOR CENTERING A PARTICULAR OBJECT.</font>
+    X  = X + ((<font color="#ffa0a0">320</font>/<font color="#ffa0a0">2</font>) - <font color="#ffa0a0">50</font>);
+    Y = Y + (<font color="#ffa0a0">200</font> / <font color="#ffa0a0">2</font>) - <font color="#ffa0a0">75</font>;
+    <font color="#ffff60"><b>asm</b></font>{
+        MOV DI, <font color="#ffa0a0">0xA000</font>  <font color="#80a0ff">/*</font><font color="#80a0ff"> Vram </font><font color="#80a0ff">*/</font>
+        MOV ES, DI
+        MOV AX, Y
+        MOV BX, Y
+        SHL AX, <font color="#ffa0a0">8</font>
+        SHL BX, <font color="#ffa0a0">6</font>
+        ADD AX, BX
+        ADD AX, X
+        MOV DI, AX
+
+        MOV AL, color      <font color="#80a0ff">/*</font><font color="#80a0ff"> Set color byte</font><font color="#80a0ff">*/</font>
+        MOV ES:[DI], AL    <font color="#80a0ff">/*</font><font color="#80a0ff"> Move the byte to that offset in VRAM </font><font color="#80a0ff">*/</font>
+   }
+}
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">/*</font>
+<font color="#80a0ff"> * Function: psetn</font>
+<font color="#80a0ff"> * WARNING : DO NOT USE ELSEWHERE!</font>
+<font color="#80a0ff"> * Purpose : To put a pixel @ x,y with given colorByte.</font>
+<font color="#80a0ff"> * Inputs  : word X: The X location of the pixel.</font>
+<font color="#80a0ff">             word Y: The Y location of the pixel.</font>
+<font color="#80a0ff"> * Returns : Void</font>
+<font color="#80a0ff"> * Modifies: Adds one pixel to the graphics screen.</font>
+<font color="#80a0ff"> * Sample Call : psetn(10, 10, 14);</font>
+<font color="#80a0ff"> </font><font color="#80a0ff">*/</font>
+<font color="#60ff60"><b>void</b></font> psetn(word X, word Y, byte color) {
+    <font color="#80a0ff">//NO OFFSET HACK!</font>
+    <font color="#ffff60"><b>asm</b></font>{
+        MOV DI, <font color="#ffa0a0">0xA000</font>  <font color="#80a0ff">/*</font><font color="#80a0ff"> Vram </font><font color="#80a0ff">*/</font>
+        MOV ES, DI
+        MOV AX, Y
+        MOV BX, Y
+        SHL AX, <font color="#ffa0a0">8</font>
+        SHL BX, <font color="#ffa0a0">6</font>
+        ADD AX, BX
+        ADD AX, X
+        MOV DI, AX
+
+        MOV AL, color      <font color="#80a0ff">/*</font><font color="#80a0ff"> Set color byte</font><font color="#80a0ff">*/</font>
+        MOV ES:[DI], AL    <font color="#80a0ff">/*</font><font color="#80a0ff"> Move the byte to that offset in VRAM </font><font color="#80a0ff">*/</font>
+   }
+}
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">/*</font>
+<font color="#80a0ff"> * Function: get_pixelcolor</font>
+<font color="#80a0ff"> * Purpose : To get a pixel @ x,y with &amp; return colorByte.</font>
+<font color="#80a0ff"> * Inputs  : word X: The X location of the pixel.</font>
+<font color="#80a0ff">             word Y: The Y location of the pixel.</font>
+<font color="#80a0ff"> * Returns : The byteColor @ x,y.</font>
+<font color="#80a0ff"> * Sample Call : byteColor = get_pixelcolor(10, 10);</font>
+<font color="#80a0ff"> </font><font color="#80a0ff">*/</font>
+byte get_pixelcolor(word X, word Y) {
+    byte color;
+
+    <font color="#80a0ff">//OFFSET HACK!</font>
+    X  = X + ((<font color="#ffa0a0">320</font>/<font color="#ffa0a0">2</font>) - <font color="#ffa0a0">50</font>);
+    Y = Y + (<font color="#ffa0a0">200</font> / <font color="#ffa0a0">2</font>) - <font color="#ffa0a0">75</font>;
+
+    <font color="#ffff60"><b>asm</b></font> MOV AH, 0DH  <font color="#80a0ff">// Select function.</font>
+    <font color="#ffff60"><b>asm</b></font> MOV CX,X     <font color="#80a0ff">/*</font><font color="#80a0ff"> X: Location </font><font color="#80a0ff">*/</font>
+    <font color="#ffff60"><b>asm</b></font> MOV DX,Y     <font color="#80a0ff">/*</font><font color="#80a0ff"> Y: Location </font><font color="#80a0ff">*/</font>
+    <font color="#ffff60"><b>asm</b></font> INT 10H      <font color="#80a0ff">// BIOS VIDEO INT</font>
+    <font color="#ffff60"><b>asm</b></font> MOV color,AL <font color="#80a0ff">/*</font><font color="#80a0ff"> Color Byte Val. </font><font color="#80a0ff">*/</font>
+
+    <font color="#ffff60"><b>return</b></font> color;    <font color="#80a0ff">// Return color.</font>
+}
+
+<font color="#ff80ff">#endif</font>
+
+</pre>
+</body>
+</html>

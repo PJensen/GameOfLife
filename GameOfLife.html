@@ -1,0 +1,420 @@
+<html>
+<head>
+<title>~\Desktop\GameOfLife\GOL.c.html</title>
+<meta name="Generator" content="Vim/6.4">
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+</head>
+<body bgcolor="#000000" text="#c0c0c0">
+<pre>
+<font color="#80a0ff">/*</font>
+<font color="#80a0ff">** Copyright 1998-2003, Peter J. Jensen</font>
+<font color="#80a0ff">** All Rights Reserved.</font>
+<font color="#80a0ff">** </font>
+<font color="#80a0ff">** This is UNPUBLISHED PROPRIETARY SOURCE CODE of Peter J. Jensen</font>
+<font color="#80a0ff">** the contents of this file may not be disclosed to third parties, copied or</font>
+<font color="#80a0ff">** duplicated in any form, in whole or in part, without the prior written</font>
+<font color="#80a0ff">** permission of Hairylogic, Inc.</font>
+<font color="#80a0ff">** </font>
+<font color="#80a0ff">** RESTRICTED RIGHTS LEGEND:</font>
+<font color="#80a0ff">** Use, duplication or disclosure by the Government is subject to restrictions</font>
+<font color="#80a0ff">** as set forth in subdivision (c)(1)(ii) of the Rights in Technical Data</font>
+<font color="#80a0ff">** and Computer Software clause at DFARS 252.227-7013, and/or in similar or</font>
+<font color="#80a0ff">** successor clauses in the FAR, DOD or NASA FAR Supplement. Unpublished -</font>
+<font color="#80a0ff">** rights reserved under the Copyright Laws of the United States.</font>
+<font color="#80a0ff">**        ______</font>
+<font color="#80a0ff">**       /_____/\</font>
+<font color="#80a0ff">**      /_____\\ \      FILE:    gol.c</font>
+<font color="#80a0ff">**     /_____\ \\ /     AUTHOR:  Pete Jensen</font>
+<font color="#80a0ff">**    /_____/ \/ / /    DATE:    October 16th, 2006</font>
+<font color="#80a0ff">**   /_____/ /   \//\   VERSION: 2.0.2</font>
+<font color="#80a0ff">**   \_____\//\   / /   </font>
+<font color="#80a0ff">**    \_____/ / /\ /    </font>
+<font color="#80a0ff">**     \_____/ \\ \     <a href="http://euler.acadiau.ca/~064881j">http://euler.acadiau.ca/~064881j</a></font>
+<font color="#80a0ff">**      \_____\ \\ </font>
+<font color="#80a0ff">**       \_____\/</font>
+<font color="#80a0ff">**</font>
+<font color="#80a0ff">**       Additional Comments / Info:</font>
+<font color="#80a0ff">**</font>
+<font color="#80a0ff">** INFO: <a href="http://en.wikipedia.org/wiki/Conway">http://en.wikipedia.org/wiki/Conway</a>'s_Game_of_Life</font>
+<font color="#80a0ff">**</font>
+<font color="#80a0ff">** NOTE: This is somewhat hacky-code; also as ONLY an expiriment decided to </font>
+<font color="#80a0ff">**    stray from my usual coding conventions and use a slightly different </font>
+<font color="#80a0ff">**    (possibly) more readable style of coding.</font>
+<font color="#80a0ff">*/</font>
+
+<font color="#ff80ff">#include </font><font color="#ffa0a0">&lt;stdio.h&gt;</font>
+<font color="#ff80ff">#include </font><font color="#ffa0a0">&lt;stdlib.h&gt;</font>
+<font color="#ff80ff">#include </font><font color="#ffa0a0">&lt;dos.h&gt;</font>
+<font color="#ff80ff">#include </font><font color="#ffa0a0">&lt;time.h&gt;</font>
+<font color="#ff80ff">#include </font><font color="#ffa0a0">&lt;conio.h&gt;</font>
+
+<font color="#ff80ff">#include </font><font color="#ffa0a0">&quot;graph.h&quot;</font>
+
+<font color="#ff80ff">#ifdef __MOUSE_ENABLED</font>
+<font color="#ff80ff">#include </font><font color="#ffa0a0">&quot;mouse.h&quot;</font>
+<font color="#ff80ff">#endif</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Screen Defines</font>
+<font color="#ff80ff">#define SCREEN_WIDTH                   </font><font color="#ffa0a0">320</font>
+<font color="#ff80ff">#define SCREEN_HEIGHT                  </font><font color="#ffa0a0">200</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Cell Growth Area.</font>
+<font color="#ff80ff">#define WIDTH                          </font><font color="#ffa0a0">100</font><font color="#ff80ff">  </font>
+<font color="#ff80ff">#define HEIGHT                         </font><font color="#ffa0a0">100</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Four bounding boxes, with shaded colors ranging from values, 20 to 23.</font>
+<font color="#ff80ff">#define BOUNDING_BOX_ONE               (</font><font color="#ffa0a0">320</font><font color="#ff80ff">/</font><font color="#ffa0a0">2</font><font color="#ff80ff">) - </font><font color="#ffa0a0">51</font><font color="#ff80ff">, (</font><font color="#ffa0a0">320</font><font color="#ff80ff">/</font><font color="#ffa0a0">2</font><font color="#ff80ff">) + </font><font color="#ffa0a0">50</font><font color="#ff80ff">, </font><font color="#ffa0a0">24</font><font color="#ff80ff">, </font><font color="#ffa0a0">125</font><font color="#ff80ff">, </font><font color="#ffa0a0">20</font>
+<font color="#ff80ff">#define BOUNDING_BOX_TWO               (</font><font color="#ffa0a0">320</font><font color="#ff80ff">/</font><font color="#ffa0a0">2</font><font color="#ff80ff">) - </font><font color="#ffa0a0">52</font><font color="#ff80ff">, (</font><font color="#ffa0a0">320</font><font color="#ff80ff">/</font><font color="#ffa0a0">2</font><font color="#ff80ff">) + </font><font color="#ffa0a0">51</font><font color="#ff80ff">, </font><font color="#ffa0a0">23</font><font color="#ff80ff">, </font><font color="#ffa0a0">126</font><font color="#ff80ff">, </font><font color="#ffa0a0">21</font>
+<font color="#ff80ff">#define BOUNDING_BOX_THREE             (</font><font color="#ffa0a0">320</font><font color="#ff80ff">/</font><font color="#ffa0a0">2</font><font color="#ff80ff">) - </font><font color="#ffa0a0">53</font><font color="#ff80ff">, (</font><font color="#ffa0a0">320</font><font color="#ff80ff">/</font><font color="#ffa0a0">2</font><font color="#ff80ff">) + </font><font color="#ffa0a0">52</font><font color="#ff80ff">, </font><font color="#ffa0a0">22</font><font color="#ff80ff">, </font><font color="#ffa0a0">127</font><font color="#ff80ff">, </font><font color="#ffa0a0">22</font>
+<font color="#ff80ff">#define BOUNDING_BOX_FOUR              (</font><font color="#ffa0a0">320</font><font color="#ff80ff">/</font><font color="#ffa0a0">2</font><font color="#ff80ff">) - </font><font color="#ffa0a0">54</font><font color="#ff80ff">, (</font><font color="#ffa0a0">320</font><font color="#ff80ff">/</font><font color="#ffa0a0">2</font><font color="#ff80ff">) + </font><font color="#ffa0a0">53</font><font color="#ff80ff">, </font><font color="#ffa0a0">21</font><font color="#ff80ff">, </font><font color="#ffa0a0">128</font><font color="#ff80ff">, </font><font color="#ffa0a0">23</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// The predefined states of the cells.</font>
+<font color="#ff80ff">#define STATE_DEAD                     </font><font color="#ffa0a0">0x00</font>
+<font color="#ff80ff">#define STATE_ALIVE                    </font><font color="#ffa0a0">0x01</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// The background color of the working cell area.</font>
+<font color="#ff80ff">#define BG_COLOR                       </font><font color="#ffa0a0">16</font>
+<font color="#ff80ff">#define CELL_COLOR                     </font><font color="#ffa0a0">9</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Predefined conditions on cellular evolution. (The Rules)</font>
+<font color="#ff80ff">#define CELL_SURVIVAL_CONDITION           (n == </font><font color="#ffa0a0">2</font><font color="#ff80ff"> || n == </font><font color="#ffa0a0">3</font><font color="#ff80ff">)</font>
+<font color="#ff80ff">#define CELL_OVERCROWDING_CONDITION       (n &gt;= </font><font color="#ffa0a0">4</font><font color="#ff80ff">)</font>
+<font color="#ff80ff">#define CELL_ISOLATION_CONDITION          (n == </font><font color="#ffa0a0">1</font><font color="#ff80ff"> || n == </font><font color="#ffa0a0">0</font><font color="#ff80ff">)</font>
+<font color="#ff80ff">#define EMPTY_CELL_GENERATION_CONDITION   (n == </font><font color="#ffa0a0">3</font><font color="#ff80ff">)</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Max number of cells.</font>
+<font color="#ff80ff">#define MAX_CELLS                      WIDTH * HEIGHT</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// The Default starting number of cells, unless specified @ cmd line.</font>
+<font color="#ff80ff">#define INIT_CELLS                     </font><font color="#ffa0a0">600</font>
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// The time to delay between each iteration, ms (milli-seconds) IFF mouse IS</font>
+<font color="#80a0ff">// enabled, and if the mouse is NOT enabled (automatic).</font>
+<font color="#ff80ff">#ifdef __MOUSE_ENABLED</font>
+<font color="#ff80ff">#define DELAY_TIME                     </font><font color="#ffa0a0">10</font><font color="#ff80ff"> </font><font color="#80a0ff">//ms</font>
+<font color="#ff80ff">#else</font>
+<font color="#ff80ff">#define DELAY_TIME                     </font><font color="#ffa0a0">50</font><font color="#ff80ff"> </font><font color="#80a0ff">//ms</font>
+<font color="#ff80ff">#endif</font>
+
+<font color="#80a0ff">// Prototypes</font>
+<font color="#60ff60"><b>int</b></font> getNeighbors(<font color="#60ff60"><b>int</b></font> x, <font color="#60ff60"><b>int</b></font> y);
+<font color="#60ff60"><b>void</b></font> displayMessage(<font color="#60ff60"><b>void</b></font>);
+<font color="#60ff60"><b>void</b></font> drawBoundingBox(<font color="#60ff60"><b>int</b></font> left, <font color="#60ff60"><b>int</b></font> right, <font color="#60ff60"><b>int</b></font> top, <font color="#60ff60"><b>int</b></font> bottom, <font color="#60ff60"><b>int</b></font> color);
+<font color="#60ff60"><b>void</b></font> displayCells(<font color="#60ff60"><b>void</b></font>);
+<font color="#60ff60"><b>void</b></font> processCells(<font color="#60ff60"><b>void</b></font>);
+<font color="#60ff60"><b>void</b></font> initializeCells(<font color="#60ff60"><b>int</b></font> initCells);
+<font color="#60ff60"><b>void</b></font> drawShadedBorder(<font color="#60ff60"><b>void</b></font>);
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Cell Data Structure, Living &amp; Non-Living.</font>
+<font color="#60ff60"><b>struct</b></font> _Cell {
+    <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>char</b></font> type;       <font color="#80a0ff">// Unused.</font>
+    <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>char</b></font> state;      <font color="#80a0ff">// STATE_DEAD (or) STATE_ALIVE</font>
+    <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>char</b></font> neighbors;  <font color="#80a0ff">// @See function getNeighbors</font>
+
+} Cells[WIDTH][HEIGHT];       <font color="#80a0ff">// H4cKy GBL storage.</font>
+
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">//                         Program Entry Point</font>
+<font color="#60ff60"><b>int</b></font> main(<font color="#60ff60"><b>int</b></font> argc, <font color="#60ff60"><b>char</b></font> **argv)
+{
+    <font color="#60ff60"><b>int</b></font> argNumCells;
+
+    (<font color="#60ff60"><b>void</b></font>) randomize();
+
+    <font color="#ffff60"><b>if</b></font> (argc == <font color="#ffa0a0">2</font>) {
+        <font color="#80a0ff">// Grab argument, convert to integer; init cells with passed arg.</font>
+        argNumCells = (<font color="#60ff60"><b>int</b></font>)atoi((<font color="#60ff60"><b>char</b></font>*)argv[<font color="#ffa0a0">1</font>]);
+        (<font color="#60ff60"><b>void</b></font>) initializeCells(argNumCells);
+
+        <font color="#80a0ff">// Display message, showing # of init'ed cells.</font>
+        printf(<font color="#ffa0a0">&quot;[Game of Life:] Initialized </font><font color="#ffa500">%d</font><font color="#ffa0a0"> Cells.&quot;</font>, argNumCells);
+
+        <font color="#80a0ff">// Wait a second.</font>
+        delay(<font color="#ffa0a0">1000</font>);
+    }
+    <font color="#80a0ff">// No arguments were passed? Initialize Default # of cells.</font>
+    <font color="#ffff60"><b>else</b></font> {
+        (<font color="#60ff60"><b>void</b></font>) initializeCells(INIT_CELLS);
+        delay(<font color="#ffa0a0">1000</font>);
+    }
+
+    <font color="#80a0ff">// Initialize 0x13H Graphics Mode, 320x200x256</font>
+    (<font color="#60ff60"><b>void</b></font>) initgraph();
+
+    <font color="#80a0ff">// Display program message, copyright etc.</font>
+    (<font color="#60ff60"><b>void</b></font>) displayMessage();
+
+    <font color="#80a0ff">// Draw a border around the cell area.</font>
+    (<font color="#60ff60"><b>void</b></font>) drawShadedBorder();
+
+<font color="#ff80ff">#ifdef __MOUSE_ENABLED    </font>
+    (<font color="#60ff60"><b>void</b></font>) ShowMouse();
+<font color="#ff80ff">#endif</font>
+
+
+    <font color="#80a0ff">// Enter main loop</font>
+    <font color="#ffff60"><b>while</b></font> ( !kbhit() )
+    {
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// From my general feelings I am guessing that opening a bracket in an #ifdef</font>
+<font color="#80a0ff">// expecting to close that bracket if there is a following #ifdef a few lines</font>
+<font color="#80a0ff">// down is somewhat of a different idea.  This technique allows me to let the</font>
+<font color="#80a0ff">// user click per iteration that they want to see.</font>
+<font color="#ff80ff">#ifdef __MOUSE_ENABLED</font>
+        (<font color="#60ff60"><b>void</b></font>)ReadMouse();
+
+        <font color="#ffff60"><b>if</b></font> (MOUSE_BUTTON_1_PRESSED) {
+<font color="#ff80ff">#endif</font>
+<font color="#80a0ff">// Display &amp; Process cells, then wait delay time, Reapeat until</font>
+<font color="#80a0ff">// keystroke is enacted.</font>
+            (<font color="#60ff60"><b>void</b></font>) displayCells();
+            (<font color="#60ff60"><b>void</b></font>) processCells();
+
+<font color="#ff80ff">#ifdef __MOUSE_ENABLED</font>
+            (<font color="#60ff60"><b>void</b></font>) processCells();
+        }                           <font color="#80a0ff">// &lt;-- END funky idea.</font>
+<font color="#ff80ff">#endif</font>
+
+        <font color="#80a0ff">// @see #define DELAY_TIME</font>
+        (<font color="#60ff60"><b>void</b></font>) delay(DELAY_TIME);
+    }
+
+<font color="#ff80ff">#ifdef __MOUSE_ENABLED</font>
+    (<font color="#60ff60"><b>void</b></font>) HideMouse();
+<font color="#ff80ff">#endif</font>
+
+    <font color="#80a0ff">// End graphics mode.</font>
+    (<font color="#60ff60"><b>void</b></font>) endgraph();
+
+    <font color="#80a0ff">// Exit politely.</font>
+    <font color="#ffff60"><b>return</b></font> <font color="#ffa0a0">EXIT_SUCCESS</font>;
+}
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Name:                         getNeighbors</font>
+<font color="#80a0ff">// Purpose:</font>
+<font color="#80a0ff">//    This function returns the number of neighbors that a specific cell </font>
+<font color="#80a0ff">//    specified by (x, y) parameters has.  This function is used mainly in </font>
+<font color="#80a0ff">//    the processing state.</font>
+<font color="#80a0ff">// Parameters:</font>
+<font color="#80a0ff">//    x - The x coordinate for cell to find neighbors of.</font>
+<font color="#80a0ff">//    y - The y coordinate for cell to find neighbors of.</font>
+<font color="#80a0ff">// Returns:</font>
+<font color="#80a0ff">//    neighborCount - The number of neighbors that this (x,y) cell has.</font>
+<font color="#60ff60"><b>int</b></font> getNeighbors(<font color="#60ff60"><b>int</b></font> x, <font color="#60ff60"><b>int</b></font> y)
+{
+    <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> cellX = x;
+    <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> cellY = y;
+    <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> neighborCount = <font color="#ffa0a0">0</font>;
+
+    <font color="#80a0ff">// LEFT NEIGHBOT</font>
+    <font color="#ffff60"><b>if</b></font> (get_pixelcolor(cellX - <font color="#ffa0a0">1</font>, cellY) == CELL_COLOR)
+        neighborCount++;
+
+    <font color="#80a0ff">// TOP LEFT NEIGHBOT</font>
+    <font color="#ffff60"><b>if</b></font> (get_pixelcolor(cellX - <font color="#ffa0a0">1</font>, cellY - <font color="#ffa0a0">1</font>) == CELL_COLOR)
+        neighborCount++;
+
+    <font color="#80a0ff">// BOTTOM LEFT NEIGHBOT</font>
+    <font color="#ffff60"><b>if</b></font> (get_pixelcolor(cellX - <font color="#ffa0a0">1</font>, cellY + <font color="#ffa0a0">1</font>) == CELL_COLOR)
+        neighborCount++;
+
+    <font color="#80a0ff">// RIGHT NEIGHBOR</font>
+    <font color="#ffff60"><b>if</b></font> (get_pixelcolor(cellX + <font color="#ffa0a0">1</font>, cellY) == CELL_COLOR)
+        neighborCount++;
+
+    <font color="#80a0ff">// TOP RIGHT NEIGHBOR</font>
+    <font color="#ffff60"><b>if</b></font> (get_pixelcolor(cellX + <font color="#ffa0a0">1</font>, cellY - <font color="#ffa0a0">1</font>) == CELL_COLOR)
+        neighborCount++;
+
+    <font color="#80a0ff">// BOTTOM RIGHT NEIGHBOR</font>
+    <font color="#ffff60"><b>if</b></font> (get_pixelcolor(cellX + <font color="#ffa0a0">1</font>, cellY + <font color="#ffa0a0">1</font>) == CELL_COLOR)
+        neighborCount++;
+
+    <font color="#80a0ff">// BOTTOM NEIGHBOR</font>
+    <font color="#ffff60"><b>if</b></font> (get_pixelcolor(cellX, cellY - <font color="#ffa0a0">1</font>) == CELL_COLOR)
+        neighborCount++;
+
+    <font color="#80a0ff">// TOP NEIGHBOR</font>
+    <font color="#ffff60"><b>if</b></font> (get_pixelcolor(cellX, cellY + <font color="#ffa0a0">1</font>) == CELL_COLOR)
+        neighborCount++;
+
+    Cells[x][y].neighbors = neighborCount;
+
+    <font color="#ffff60"><b>return</b></font> neighborCount;
+}
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Name:                         drawShadedBorder</font>
+<font color="#80a0ff">// Purpose: </font>
+<font color="#80a0ff">//    Draw a special shaded border.</font>
+<font color="#80a0ff">// Parameters: None</font>
+<font color="#80a0ff">// Returns:    None</font>
+<font color="#80a0ff">///</font>
+<font color="#60ff60"><b>void</b></font> drawShadedBorder()
+{
+    (<font color="#60ff60"><b>void</b></font>) drawBoundingBox(BOUNDING_BOX_ONE);
+    (<font color="#60ff60"><b>void</b></font>) drawBoundingBox(BOUNDING_BOX_TWO);
+    (<font color="#60ff60"><b>void</b></font>) drawBoundingBox(BOUNDING_BOX_THREE);
+    (<font color="#60ff60"><b>void</b></font>) drawBoundingBox(BOUNDING_BOX_FOUR);
+
+    <font color="#ffff60"><b>return</b></font>;
+}
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Name:                         initializeCells</font>
+<font color="#80a0ff">// Purpose: </font>
+<font color="#80a0ff">//    Initialize all of the cells, living and non-living.</font>
+<font color="#80a0ff">// Parameters: None</font>
+<font color="#80a0ff">// Returns:    None</font>
+<font color="#60ff60"><b>void</b></font> initializeCells(<font color="#60ff60"><b>int</b></font> init)
+{
+    <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> w, h, x, y;
+    <font color="#60ff60"><b>register</b></font> <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> index;
+
+    <font color="#80a0ff">// Init Cells Dead</font>
+    <font color="#ffff60"><b>for</b></font> (h = <font color="#ffa0a0">0</font>; h &lt; HEIGHT; h++)
+        <font color="#ffff60"><b>for</b></font> (w = <font color="#ffa0a0">0</font>; w &lt; WIDTH; w++)
+            Cells[w][h].state = STATE_DEAD;
+
+    <font color="#80a0ff">// Init Alive Cells</font>
+    <font color="#ffff60"><b>for</b></font> (index = <font color="#ffa0a0">0</font>; index &lt; init; index++)
+    {
+        x = rand() % WIDTH;
+        y = rand() % HEIGHT;
+
+        Cells[x][y].state = STATE_ALIVE;
+    }
+
+    <font color="#ffff60"><b>return</b></font>;
+}
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Name:                         displayCells</font>
+<font color="#80a0ff">// Purpose: </font>
+<font color="#80a0ff">//    Display all cells based on their current states.</font>
+<font color="#80a0ff">// Parameters: None</font>
+<font color="#80a0ff">// Returns:    None</font>
+<font color="#60ff60"><b>void</b></font> displayCells()
+{
+
+    <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> w, h;
+
+        <font color="#80a0ff">// Display Cells</font>
+        <font color="#ffff60"><b>for</b></font> (h = <font color="#ffa0a0">0</font>; h &lt; HEIGHT; h++)
+            <font color="#ffff60"><b>for</b></font> (w = <font color="#ffa0a0">0</font>; w &lt; WIDTH; w++)
+            {
+                <font color="#ffff60"><b>if</b></font> (Cells[w][h].state == STATE_ALIVE)
+                    pset(w, h, CELL_COLOR);
+                <font color="#ffff60"><b>else</b></font>
+                    pset(w, h, BG_COLOR);
+            }
+    <font color="#ffff60"><b>return</b></font>;
+}
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Name:                         processCells</font>
+<font color="#80a0ff">// Purpose:</font>
+<font color="#80a0ff">//    Process cell state into next states.</font>
+<font color="#80a0ff">// Parameters: None</font>
+<font color="#80a0ff">// Returns:    None</font>
+<font color="#60ff60"><b>void</b></font> processCells()
+{
+        <font color="#60ff60"><b>int</b></font> w, h, n;
+
+        <font color="#ffff60"><b>for</b></font> (h = <font color="#ffa0a0">0</font>; h &lt; HEIGHT; h++)
+            <font color="#ffff60"><b>for</b></font> (w = <font color="#ffa0a0">0</font>; w &lt; WIDTH; w++)
+            {
+                n = getNeighbors(w, h);
+
+                <font color="#ffff60"><b>if</b></font> (Cells[w][h].state == STATE_ALIVE)
+                {
+                    <font color="#ffff60"><b>if</b></font> (CELL_SURVIVAL_CONDITION)
+                        Cells[w][h].state = STATE_ALIVE;
+
+                    <font color="#ffff60"><b>else</b></font> <font color="#ffff60"><b>if</b></font> (CELL_OVERCROWDING_CONDITION)
+                        Cells[w][h].state = STATE_DEAD;
+
+                    <font color="#ffff60"><b>else</b></font> <font color="#ffff60"><b>if</b></font> (CELL_ISOLATION_CONDITION)
+                        Cells[w][h].state = STATE_DEAD;
+                }
+                <font color="#ffff60"><b>else</b></font>
+                    <font color="#ffff60"><b>if</b></font> (EMPTY_CELL_GENERATION_CONDITION)
+                        Cells[w][h].state = STATE_ALIVE;
+
+                <font color="#ffff60"><b>if</b></font> (n == <font color="#ffa0a0">8</font>)
+                    Cells[w][h].state = STATE_ALIVE;
+            }
+
+    <font color="#ffff60"><b>return</b></font>;
+}
+
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Name:                         displayMessage</font>
+<font color="#80a0ff">// Purpose:</font>
+<font color="#80a0ff">//    Display the program message.</font>
+<font color="#80a0ff">// Parameters: None</font>
+<font color="#80a0ff">// Returns:    None</font>
+<font color="#60ff60"><b>void</b></font> displayMessage()
+{
+    gotoxy(<font color="#ffa0a0">3</font>, <font color="#ffa0a0">18</font>);
+    printf(<font color="#ffa0a0">&quot;John Conway's - 'Game of Life'&quot;</font>);
+    gotoxy(<font color="#ffa0a0">3</font>, <font color="#ffa0a0">21</font>);
+    printf(<font color="#ffa0a0">&quot;Copyright (c) 2006, Peter J. Jensen,</font><font color="#ffa500">\n</font><font color="#ffa0a0"> All Rights Reserved.&quot;</font>);
+
+<font color="#ff80ff">#ifdef __MOUSE_ENABLED</font>
+    gotoxy(<font color="#ffa0a0">2</font>, <font color="#ffa0a0">2</font>);
+    printf(<font color="#ffa0a0">&quot;[Mouse]:ON Left-click -&gt; 'next-state'&quot;</font>);
+<font color="#ff80ff">#endif</font>
+
+    <font color="#ffff60"><b>return</b></font>;
+}
+<font color="#80a0ff">//////////////////////////////////////////////////////////////////////////////</font>
+<font color="#80a0ff">// Name:                         drawBoundingBox</font>
+<font color="#80a0ff">// Purpose: </font>
+<font color="#80a0ff">//    This function simply draws a rectangle of a given color based on the </font>
+<font color="#80a0ff">//    four coordinates that the client specifies.  The color is based on a </font>
+<font color="#80a0ff">//    number from 0 to 256.</font>
+<font color="#80a0ff">// Parameters: </font>
+<font color="#80a0ff">//    left     - The left coord.</font>
+<font color="#80a0ff">//    right    - The right coord.</font>
+<font color="#80a0ff">//    top      - The top coord, NOTE: top &lt; bottom</font>
+<font color="#80a0ff">//    bottom   - The bottom coord, NOTE: bottom &gt; top</font>
+<font color="#80a0ff">// Returns:    None</font>
+<font color="#60ff60"><b>void</b></font> drawBoundingBox(<font color="#60ff60"><b>int</b></font> left, <font color="#60ff60"><b>int</b></font> right, <font color="#60ff60"><b>int</b></font> top, <font color="#60ff60"><b>int</b></font> bottom, <font color="#60ff60"><b>int</b></font> color)
+{
+    <font color="#60ff60"><b>register</b></font> <font color="#60ff60"><b>unsigned</b></font> <font color="#60ff60"><b>int</b></font> x, y;
+
+    <font color="#80a0ff">/*</font><font color="#80a0ff"> Drow top boundary </font><font color="#80a0ff">*/</font>
+    <font color="#ffff60"><b>for</b></font> (x = left; x &lt;= right; x++)
+        psetn(x, top, color);
+
+    <font color="#80a0ff">/*</font><font color="#80a0ff"> Draw bottom boundary </font><font color="#80a0ff">*/</font>
+    <font color="#ffff60"><b>for</b></font> (x = left; x &lt;= right; x++)
+        psetn(x, bottom, color);
+
+    <font color="#80a0ff">/*</font><font color="#80a0ff"> Draw left boundary </font><font color="#80a0ff">*/</font>
+    <font color="#ffff60"><b>for</b></font> (y = top; y &lt;= bottom; y++)
+        psetn(left, y, color);
+
+    <font color="#80a0ff">/*</font><font color="#80a0ff"> Draw right boundary </font><font color="#80a0ff">*/</font>
+    <font color="#ffff60"><b>for</b></font> (y = top; y &lt;= bottom; y++)
+        psetn(right, y, color);
+
+    <font color="#ffff60"><b>return</b></font>;
+}
+</pre>
+</body>
+</html>
